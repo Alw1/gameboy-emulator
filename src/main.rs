@@ -1,4 +1,4 @@
-mod cpu;
+pub mod cpu;
 use cpu::{Registers, CPU};
 
 fn main() {
