@@ -1,3 +1,6 @@
+// pub mod cpu;
+// use cpu::cpu::*;
+
 //Module for printing debug info
 
 /*
@@ -9,4 +12,12 @@ TODO LIST:
 - Add more debug modules as I finish more aspects of the system
 
 */
+
+// fn print_cpu_debug (cpu : CPU) {
+
+//     println!("--Registers--");
+//     println!("A: {}   F: {}", cpu.register.get_register(Register::A),cpu.register.get_register(Register::A));
+
+
+// }
 

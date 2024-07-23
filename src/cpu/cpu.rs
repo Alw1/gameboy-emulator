@@ -1,10 +1,13 @@
-// mod instructions;
+// use crate::cpu::instructions;
+
+const UPPER_WORD_MASK : u16 = 0x00FF;
+const LOWER_WORD_MASK : u16 = 0x00FF;
 
 pub enum Flag {
-    Z = 0x0080,
-    N = 0x0040,
-    H = 0x0020,
-    C = 0x0010,
+    Z = 0x0080, // Zero Flag
+    N = 0x0040, // Subtract Flag
+    H = 0x0020, // Half Carry Flag
+    C = 0x0010, // Carry Flag
 }
 
 pub enum Register{
@@ -20,8 +23,10 @@ pub enum Register{
     PC,
 }
 
+
 #[derive(Debug)]
-pub struct Registers {
+pub struct CPU {
+    //Registers
     pub AF: u16, //Accumulator & Flags
     pub BC: u16, //Registers B & C
     pub DE: u16, //Registers D & E
@@ -30,17 +35,29 @@ pub struct Registers {
     pub PC: u16, //Program Counter
 }
 
-impl Registers {
-    pub fn new() -> Self {
-        //Initialize registers to start addresses
-        Registers {
-            AF : 0x0100, 
-            BC : 0x0013,
-            DE : 0x00D8,
-            HL : 0x014D,
-            SP : 0xFFFE,
-            PC : 0x0100,
+impl CPU {
+    pub fn new() -> CPU {
+        CPU {
+                //Initial Register values
+                AF : 0x01B0, 
+                BC : 0x0013,
+                DE : 0x00D8,
+                HL : 0x014D,
+                SP : 0xFFFE,
+                PC : 0x0100,
         }
+    }
+
+    //execute an instruction
+    pub fn execute(&mut self, instruction : u16) {
+
+    }
+
+    //Provide debug info for TUI
+    pub fn get_state(&mut self) {
+
+
+
     }
 
     pub fn set_flag(&mut self, flag: Flag) {
@@ -51,16 +68,16 @@ impl Registers {
         self.AF &= (flag as u16) ^ 0xFFFF;
     }
 
-    pub fn get_register(&mut self, value: u16, register: Register) -> u16{
+    pub fn get_register(&self, register: Register) -> u16{
         match register {
-            Register::A => (self.AF >> 8),
-            Register::F => self.AF,
-            Register::B => (self.BC >> 8),
-            Register::C => self.BC,
-            Register::D => (self.DE >> 8),
-            Register::E => self.DE,
-            Register::H => (self.HL >> 8),
-            Register::L => self.HL,
+            Register::A => self.AF >> 8,
+            Register::F => self.AF & 0xFF00,
+            Register::B => self.BC >> 8,
+            Register::C => self.BC & 0xFF00,
+            Register::D => self.DE >> 8,
+            Register::E => self.DE & 0xFF00,
+            Register::H => self.HL >> 8,
+            Register::L => self.HL & 0xFF00,
             Register::SP => self.SP,
             Register::PC => self.PC,
         }
@@ -79,31 +96,6 @@ impl Registers {
             Register::SP => self.SP = value,
             Register::PC => self.PC = value,
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct CPU {
-    pub registers : Registers,
- 
-}
-
-impl CPU {
-    pub fn new() -> CPU {
-        CPU {
-            registers : Registers::new(),
-        }
-    }
-
-    //execute an instruction
-    pub fn execute(&mut self, instruction : u16) {
-
-    }
-
-    //Provide debug info for TUI
-    pub fn get_state(&mut self) {
-
-
     }
 }
 

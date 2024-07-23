@@ -1,9 +1,8 @@
-
-fn opcode_handler(opcode : u16) -> u16 {
+fn opcode_handler(opcode : u8) -> u16 {
 
     match opcode {
-        0x00 => 1,
-        0x01 => 1,
+        0x00 => 1, //NOP
+        0x01 => 1, //ld r16, imm16
         0x02 => 1,
         0x03 => 1,
         0x04 => 1,
@@ -18,7 +17,7 @@ fn opcode_handler(opcode : u16) -> u16 {
         0x0D => 1,
         0x0E => 1,
         0x0F => 1,
-        _    => 0,
+        _    => eprintln!("ERROR: INVALID OPCODE"),
     }
     // return 10
 }
