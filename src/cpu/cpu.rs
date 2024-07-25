@@ -1,7 +1,5 @@
 // use crate::cpu::instructions;
 
-use std::collections::btree_map::ValuesMut;
-
 const UPPER_WORD_MASK : u16 = 0x00FF;
 const LOWER_WORD_MASK : u16 = 0x00FF;
 
@@ -44,26 +42,39 @@ impl CPU {
     pub fn new() -> CPU {
         CPU {
                 //Initial Register values
-                AF : 0x01B0, 
-                BC : 0x0013,
-                DE : 0x00D8,
-                HL : 0x014D,
-                SP : 0xFFFE,
-                PC : 0x0100,
+                // AF : 0x01B0, 
+                // BC : 0x0013,
+                // DE : 0x00D8,
+                // HL : 0x014D,
+                // SP : 0xFFFE,
+                // PC : 0x0100,
+
+                //Test values
+                AF : 0x0000, 
+                BC : 0x0000,
+                DE : 0x0000,
+                HL : 0x0000,
+                SP : 0x0000,
+                PC : 0x1000,
         }
     }
 
-    //execute an instruction
-    pub fn execute_instruction(&mut self) {
-        let mut opcode = self.PC; 
+    // //execute an instruction
+    // pub fn execute_instruction(&mut self) {
+    //     let mut opcode = 0; 
 
-        //Increment PC if prefixed instruction
-        if opcode == 0xCB { 
-            opcode = (self.PC + 1) + 0x100; // Shift look up table
-        }
+    //     //Increment PC if prefixed instruction
+    //     if opcode == 0xCB { 
+    //         opcode = (self.PC + 1) + 0x100; // Shift look up table
+    //         //call Cb prefixed handler function
+    //     }
 
-        opcode_handler(opcode);
-    }
+    //     // will return the number of cycles taken by the instruction
+    //     //let cpu_cycles = process_opcode(opcode);
+
+    //     //delay(cpu_cycles)
+    //     self.opcode_handler(opcode);
+    // }
 
     //Provide debug info for TUI
     pub fn get_state(&mut self) {
@@ -83,13 +94,13 @@ impl CPU {
     pub fn get_register(&self, register: Register) -> u16{
         match register {
             Register::A => self.AF >> 8,
-            Register::F => self.AF & 0xFF00,
+            Register::F => self.AF & 0x00FF,
             Register::B => self.BC >> 8,
-            Register::C => self.BC & 0xFF00,
+            Register::C => self.BC & 0x00FF,
             Register::D => self.DE >> 8,
-            Register::E => self.DE & 0xFF00,
+            Register::E => self.DE & 0x00FF,
             Register::H => self.HL >> 8,
-            Register::L => self.HL & 0xFF00,
+            Register::L => self.HL & 0x00FF,
             Register::AF => self.AF,
             Register::BC => self.BC,
             Register::DE => self.DE,
@@ -101,13 +112,13 @@ impl CPU {
 
     pub fn set_register(&mut self, value: u16, register: Register){
         match register {
-            Register::A => self.AF = (self.AF & 0x00FF) | value,
+            Register::A => self.AF = (self.AF & 0x00FF) | value << 8,
             Register::F => self.AF = (self.AF & 0xFF00) | value,
-            Register::B => self.BC = (self.BC & 0x00FF) | value,
+            Register::B => self.BC = (self.BC & 0x00FF) | value << 8,
             Register::C => self.BC = (self.BC & 0xFF00) | value,
-            Register::D => self.DE = (self.DE & 0x00FF) | value,
-            Register::E => self.DE = (self.DE & 0x00FF) | value,
-            Register::H => self.HL = (self.DE & 0x00FF) | value,
+            Register::D => self.DE = (self.DE & 0x00FF) | value << 8,
+            Register::E => self.DE = (self.DE & 0xFF00) | value,
+            Register::H => self.HL = (self.DE & 0x00FF) | value << 8,
             Register::L => self.HL = (self.DE & 0xFF00) | value,
             Register::AF => self.AF = value,
             Register::BC => self.BC = value,
@@ -118,7 +129,9 @@ impl CPU {
         }
     }
 
-    pub fn opcode_handler(&mut self, opcode : u8) {
+    pub fn opcode_handler(&mut self, opcode : u8) -> u8{
+        
+        //Function will return number of cycles taken by instruciton
 
         // Temp variable until I figure out memory shit
 
@@ -126,15 +139,40 @@ impl CPU {
         //      Make function to manage cpu cycles required for each opcode
         //      Add styff for interrupts
 
-        let get_byte = 0x0;
+        let get_byte = 0x0; //Placeholder til memory exists to pull data after opcode
         
         match opcode {
             0x00 => {1}, // NOP
-            0x01 => {self.set_register(get_byte, Register::BC)}, // ld r16, imm16
-            0x02 => {1}, // LD BC, A
-            0x03 => 1, // INC BC
-            0x04 => 1, // INC B
-            0x05 => 1, // DEC B
+            0x01 => {
+                self.set_register(get_byte, Register::BC); 
+                return 4
+            }, // ld r16, imm16
+            0x02 => {
+                let val = self.get_register(Register::B) + self.get_register(Register::C);
+                self.set_register(val, Register::A);
+                return 12;
+            }, // LD BC, A
+            0x03 => {
+                let val = self.get_register(Register::BC) + 0x1;
+                self.set_register(val, Register::BC);
+                return 8;
+            }, // INC BC
+            0x04 => {
+                let val = self.get_register(Register::B) + 0x1;
+                self.set_register(val, Register::B);
+                self.set_flag(Flag::Z);
+                self.set_flag(Flag::N);
+                self.set_flag(Flag::H);
+                return 4;
+            }, // INC B
+            0x05 => {
+                let val = self.get_register(Register::B) -1;
+                self.set_register(val, Register::B);
+                self.set_flag(Flag::Z);
+                self.clear_flag(Flag::N);
+                self.set_flag(Flag::H);
+                return 4;
+            }, // DEC B
             0x06 => 1, // LD B n8
             0x07 => 1, // RLCA 
             0x08 => 1, // LD a16 SP
@@ -162,7 +200,15 @@ impl CPU {
             0x1F => 90, // RRA
             0x20 => 90, // JR NZ e8
             0x21 => 90, // LD HL n16
-            0x22 => 90, //
+            0x22 => 90, // LD HL A
+            0x23 => 90, // INC HL
+            0x24 => 90, // INC H
+            0x25 => 90, // DEC H
+            0x26 => 90, // LD H n8
+            0x27 => 90, // DAA 
+            0x28 => 90, //  JR Z e8
+            0x29 => 90, // ADD HL HL
+            0x2A => 90, // LD A HL
             _    => {panic!("ERROR: Invalid Opcode");}
        }
         // return 10
